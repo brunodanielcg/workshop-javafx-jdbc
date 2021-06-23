@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import db.DbException;
 import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
@@ -28,7 +29,7 @@ import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
 
-	
+	private DepartmentService service;
 	private Department entity;
 	
 	@FXML
@@ -42,6 +43,10 @@ public class DepartmentFormController implements Initializable {
 	@FXML
 	private Button btCancel;
 	
+	public void setDepartmentService (DepartmentService service) {
+		this.service = service;
+	}
+	
 	public void setDepartment(Department entity) {
 		this.entity = entity;
 	}
@@ -53,22 +58,40 @@ public class DepartmentFormController implements Initializable {
 		txtId.setText(String.valueOf(entity.getId()));
 		txtName.setText(entity.getName());
 	}
-
-//	private ObservableList<Department> obsList;
 	
 	@FXML
-	public void onBtSaveAction(ActionEvent event) {
-		System.out.println("onBtSaveAction");
-//		Stage parentStage = Utils.currentStage(event);
-		// * Here we add a method to instantiate a new department and add it to
-		// DepartmentList
+	public void onBtSaveAction(ActionEvent event) {		
+		if (entity == null) {
+			throw new IllegalStateException ("Entity was null");
+		}
+		if (service == null) {
+			throw new IllegalStateException ("Service was null");
+		}
+		try {
+			entity = getFormData();
+			service.saveOrUpdate(entity);
+			Utils.currentStage(event).close();
+			MainViewController controller = new MainViewController();
+			controller.loadView();
+			
+		}
+		catch (DbException e) {
+			Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
+		}
+	}
+
+	private Department getFormData() {
+	Department obj = new Department();
+	
+	obj.setId(Utils.tryParseToInt(txtId.getText()));
+	obj.setName(txtName.getText());
+	
+	return obj;
 	}
 
 	@FXML
 	public void onBtCancelAction(ActionEvent event) {
-		System.out.println("onBtCancelAction");
-//		Stage parentStage = Utils.currentStage(event);
-//		closeDialogForm();
+		Utils.currentStage(event).close();		
 	}
 	
 	@Override
@@ -80,28 +103,4 @@ public class DepartmentFormController implements Initializable {
 		Constraints.setTextFieldInteger(txtId);		
 		Constraints.setTextFieldMaxLength(txtName, 30);		
 	}
-	
-//	private void closeDialogForm() {	
-//
-//		try {
-//						
-//			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
-//			Pane pane = loader.load();
-//			
-//
-//			if (loader )
-//			
-//			Stage dialogStage = new Stage();
-//			dialogStage.setTitle("Enter Department data");
-//			dialogStage.setScene(new Scene(pane));
-//			dialogStage.setResizable(false);
-//			dialogStage.initOwner(parentStage);
-//			dialogStage.initModality(Modality.WINDOW_MODAL);
-//			dialogStage.showAndWait();
-//		} catch (IOException e) {
-//			Alerts.showAlert("IOExcepetion", "Error loading view", e.getMessage(), AlertType.ERROR);
-//		}
-//	} 
-	  
-	
 }
